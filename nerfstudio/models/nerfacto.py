@@ -46,7 +46,7 @@ from nerfstudio.model_components.scene_colliders import NearFarCollider
 from nerfstudio.model_components.shaders import NormalsShader
 from nerfstudio.models.base_model import Model, ModelConfig
 from nerfstudio.utils import colormaps
-
+from nerfstudio.field_components.encodings import NeRFEncoding
 
 @dataclass
 class NerfactoModelConfig(ModelConfig):
@@ -152,6 +152,12 @@ class NerfactoModel(Model):
 
         appearance_embedding_dim = self.config.appearance_embed_dim if self.config.use_appearance_embedding else 0
 
+        position_encoding = NeRFEncoding(
+            in_dim=3, num_frequencies=16, min_freq_exp=0.0, max_freq_exp=16.0, include_input=True
+        )
+        direction_encoding = NeRFEncoding(
+            in_dim=3, num_frequencies=4, min_freq_exp=0.0, max_freq_exp=4.0, include_input=True
+        )
         # Fields
         self.field = NerfactoField(
             self.scene_box.aabb,
@@ -170,6 +176,7 @@ class NerfactoModel(Model):
             appearance_embedding_dim=appearance_embedding_dim,
             average_init_density=self.config.average_init_density,
             implementation=self.config.implementation,
+            position_encoding=position_encoding, direction_encoding=direction_encoding, use_integrated_encoding=True
         )
 
         self.camera_optimizer: CameraOptimizer = self.config.camera_optimizer.setup(
